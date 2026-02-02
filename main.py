@@ -1,7 +1,7 @@
 import sys
-from llm import LLMFactory
-from agent import CodingAgent
-from tools import ToolManager
+from elephan_code.llm import LLMFactory
+from elephan_code.agent import CodingAgent
+from elephan_code.tools import ToolManager
 
 
 if __name__ == "__main__":

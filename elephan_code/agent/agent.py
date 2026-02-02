@@ -1,7 +1,7 @@
 import json
 
-from llm import LLMInterface
-from tools import ToolManager
+from elephan_code.llm.llm import LLMInterface
+from elephan_code.tools.tools import ToolManager
 
 
 class CodingAgent:
