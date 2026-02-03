@@ -1,0 +1,4 @@
+# Elephan-Code Dependencies
+pydantic>=2.0.0
+openai>=1.0.0
+rich>=13.0.0

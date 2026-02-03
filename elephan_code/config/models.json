@@ -1,0 +1,45 @@
+{
+  "default": "anthropic/claude-3.5-sonnet",
+  "models": [
+    {
+      "id": "anthropic/claude-3.5-sonnet",
+      "name": "Claude 3.5 Sonnet",
+      "description": "Anthropic's balanced model - fast and capable"
+    },
+    {
+      "id": "anthropic/claude-3-opus",
+      "name": "Claude 3 Opus",
+      "description": "Anthropic's most powerful model"
+    },
+    {
+      "id": "openai/gpt-4o",
+      "name": "GPT-4o",
+      "description": "OpenAI's flagship multimodal model"
+    },
+    {
+      "id": "openai/gpt-4o-mini",
+      "name": "GPT-4o Mini",
+      "description": "OpenAI's fast and affordable model"
+    },
+    {
+      "id": "google/gemini-pro-1.5",
+      "name": "Gemini Pro 1.5",
+      "description": "Google's advanced model with long context"
+    },
+    {
+      "id": "meta-llama/llama-3.1-70b-instruct",
+      "name": "Llama 3.1 70B",
+      "description": "Meta's open-source large model"
+    },
+    {
+      "id": "deepseek/deepseek-chat",
+      "name": "DeepSeek Chat",
+      "description": "DeepSeek's conversational model"
+    },
+    {
+      "id": "qwen/qwen-2.5-72b-instruct",
+      "name": "Qwen 2.5 72B",
+      "description": "Alibaba's powerful multilingual model"
+    }
+  ]
+}
