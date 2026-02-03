@@ -1,3 +1,3 @@
-from elephan_code.agent.agent import CodingAgent
+from elephan_code.agent.agent import Agent
 
-__all__ = ["CodingAgent"]
+__all__ = ["Agent"]

@@ -1,16 +1,34 @@
+import os
 import sys
 from elephan_code.llm import LLMFactory
-from elephan_code.agent import CodingAgent
+from elephan_code.agent import Agent
 from elephan_code.tools import ToolManager
 
 
-if __name__ == "__main__":
-    llm = LLMFactory.get_llm(
-        "openrouter", 
-        api_key="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",
-        model_id=sys.argv[2]
-    )
-    tools = ToolManager()
-    agent = CodingAgent(llm, tools)
+def _get_env_api_key() -> str:
+    return os.environ.get("OPENROUTER_API_KEY")
 
-    agent.run(sys.argv[1])
+
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python main.py <task> <model_id>")
+        sys.exit(1)
+
+    api_key = _get_env_api_key()
+    if not api_key:
+        print("ERROR: OPENROUTER_API_KEY environment variable is not set.")
+        sys.exit(2)
+
+    task = sys.argv[1]
+    model_id = sys.argv[2]
+
+    llm = LLMFactory.get_llm(
+        "openrouter",
+        api_key=api_key,
+        model_id=model_id,
+    )
+
+    tools = ToolManager()
+    agent = Agent(llm, tools)
+
+    agent.run(task)
