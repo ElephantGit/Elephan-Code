@@ -2,6 +2,8 @@ from typing import Callable, Dict, Any
 from .base_tool import ToolResult
 from .file_tool import FileTool
 from .exec_tool import ExecTool
+from .git_tool import GitTool
+from .env_tool import EnvTool
 
 
 class ToolManager:
@@ -13,6 +15,8 @@ class ToolManager:
         # 注册基础工具（兼容旧名称）
         file_tool = FileTool()
         exec_tool = ExecTool()
+        git_tool = GitTool()
+        env_tool = EnvTool()
 
         # register callable wrappers that accept kwargs
         self.register_tool("read_file", lambda **p: file_tool.run(action="read", **p))
@@ -21,6 +25,15 @@ class ToolManager:
         self.register_tool("excute_shell", lambda **p: exec_tool.run(**p))
         # 添加正确拼写别名
         self.register_tool("execute_shell", lambda **p: exec_tool.run(**p))
+        # git and env tools
+        self.register_tool("git", lambda **p: git_tool.run(**p))
+        self.register_tool("git_status", lambda **p: git_tool.status(**p))
+        self.register_tool("git_branch", lambda **p: git_tool.branch(**p))
+        self.register_tool("git_commit", lambda **p: git_tool.commit(**p))
+
+        self.register_tool("env", lambda **p: env_tool.run(**p))
+        self.register_tool("check_deps", lambda **p: env_tool.run(action="check_deps", **p))
+        self.register_tool("list_env", lambda **p: env_tool.run(action="list_env", **p))
 
     def register_tool(self, name: str, func: Callable[..., ToolResult]):
         self.tools[name] = func

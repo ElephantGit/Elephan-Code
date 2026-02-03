@@ -10,18 +10,21 @@ def _get_env_api_key() -> str:
 
 
 if __name__ == "__main__":
+    from elephan_code.utils.logging import get_logger
+    lg = get_logger("elephan.main")
+
     if len(sys.argv) < 3:
-        print("Usage: python main.py <task> <model_id>")
+        lg.error("Usage: python main.py <task> <model_id>")
         sys.exit(1)
 
     api_key = _get_env_api_key()
     if not api_key:
-        print("ERROR: OPENROUTER_API_KEY environment variable is not set.")
+        lg.error("ERROR: OPENROUTER_API_KEY environment variable is not set.")
         sys.exit(2)
 
     task = sys.argv[1]
     model_id = sys.argv[2]
-
+    
     llm = LLMFactory.get_llm(
         "openrouter",
         api_key=api_key,

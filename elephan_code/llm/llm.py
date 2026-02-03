@@ -1,6 +1,5 @@
 import json
 import re
-import requests
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field, ValidationError
 
@@ -60,41 +59,68 @@ class OpenRouterManager(LLMInterface):
         return f"\nCRITICAL: Your response MUST be a valid JSON object matching this schema:\n{json.dumps(schema, indent=2)}"
 
     def ask(self, messages: List[Dict[str, str]]) -> AgentResponse:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/your-repo/coding-agent", # OpenRouter 必填
-        }
+        # Use OpenAI python client configured to point at OpenRouter's OpenAI-compatible endpoint.
+        try:
+            import openai
+        except Exception as ie:
+            raise ImportError("openai package is required to use OpenRouterManager via OpenAI client. Install with `pip install openai`.") from ie
 
-        # 构造 Payload
-        payload = {
-            "model": self.model_id,
-            "messages": messages,
-            "response_format": {"type": "json_object"} # 强制模型输出 JSON 模式
-        }
+        # Configure openai client to target OpenRouter base
+        api_base = self.base_url
+        if api_base.endswith('/chat/completions'):
+            api_base = api_base.rsplit('/chat/completions', 1)[0]
+
+        openai.api_key = self.api_key
+        openai.base_url = api_base
+
 
         try:
-            response = requests.post(self.base_url, headers=headers, json=payload, timeout=60)
-            response.raise_for_status()
-            
-            raw_data = response.json()
-            content = raw_data['choices'][0]['message']['content']
-            
+            # Use OpenAI client v1 style: from openai import OpenAI; client = OpenAI(...)
+            try:
+                from openai import OpenAI
+            except Exception:
+                # Older openai package may expose OpenAI differently; re-raise informative error
+                raise ImportError("openai>=1.0.0 is required for OpenRouterManager client integration.\n"
+                                  "Install/upgrade with: pip install -U openai")
+
+            client = OpenAI(api_key=self.api_key, 
+                            base_url=api_base,
+                            )
+            resp = client.chat.completions.create(
+                model=self.model_id,
+                messages=messages,
+                extra_headers={
+                    "HTTP-Referer": "https://github.com/ElephantGit/Elephan-Code.git", # Required for OpenRouter rankings
+                    "X-Title": "Elephatn-Code",                  # Optional but recommended
+                }     
+            )
+
+            # Extract content from response (support dict or attribute access)
+            content = ''
+            choices = getattr(resp, 'choices', None) or resp.get('choices', [])
+            if choices:
+                first = choices[0]
+                # support both dict and object forms
+                if isinstance(first, dict):
+                    msg = first.get('message') or first.get('message', {})
+                    if isinstance(msg, dict):
+                        content = msg.get('content', '')
+                    else:
+                        content = ''
+                else:
+                    msg = getattr(first, 'message', None)
+                    content = getattr(msg, 'content', '') if msg is not None else ''
+
             # --- 解析与校验流程 ---
-            # 1. 提取 JSON 字典
             data_dict = ResponseParser.clean_and_parse(content)
-            
-            # 2. Pydantic 强校验（解决 KeyError 的核心）
             return AgentResponse.model_validate(data_dict)
 
         except ValidationError as ve:
-            # 如果字段缺失或类型错误，返回一个特殊的失败动作
             return AgentResponse(
                 thought=f"I failed to follow the format: {str(ve)}",
                 action=ActionModel(name="recover_from_error", parameters={"error": ve.errors()})
             )
         except Exception as e:
-            # 网络或其他异常
             return AgentResponse(
                 thought="System error occurred.",
                 action=ActionModel(name="system_error", parameters={"message": str(e)})

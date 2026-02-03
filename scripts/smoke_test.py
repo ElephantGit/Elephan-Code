@@ -42,16 +42,33 @@ def main():
 
     llm = FakeLLM(seq)
     tools = ToolManager()
+    # 使用轨迹记录器并保存到 runs/
+    from elephan_code.utils.trajectory import TrajectoryRecorder
+    recorder = TrajectoryRecorder(save_dir="runs")
     agent = Agent(llm, tools)
+    agent.trajectory = recorder
 
     agent.run("smoke test")
 
+    # show saved trajectory
+    try:
+        from elephan_code.utils.logging import get_logger
+
+        lg = get_logger("elephan.scripts.smoke_test")
+        path = recorder._auto_path()
+        lg.info("[Smoke Verify] trajectory saved to: %s", path)
+        lg.info(open(path, 'r', encoding='utf-8').read())
+    except Exception:
+        pass
+
     # verify file written
     try:
+        from elephan_code.utils.logging import get_logger
+        lg = get_logger("elephan.scripts.smoke_test")
         with open("smoke.txt", "r", encoding="utf-8") as f:
-            print('\n[Smoke Verify] file content:', f.read())
+            lg.info("[Smoke Verify] file content: %s", f.read())
     except Exception as e:
-        print("[Smoke Verify] file not found or error:", e)
+        lg.error("[Smoke Verify] file not found or error: %s", e)
 
 
 if __name__ == '__main__':
