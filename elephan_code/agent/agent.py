@@ -2,6 +2,7 @@ import json
 import typing
 
 from elephan_code.llm.llm import LLMInterface
+from elephan_code.llm.prompt_manager import PromptManager
 from elephan_code.tools import ToolManager
 from elephan_code.utils.trajectory import TrajectoryRecorder
 from elephan_code.utils.logging import get_logger
@@ -13,18 +14,38 @@ class Agent:
     def __init__(self, llm: LLMInterface, tools: ToolManager):
         self.llm = llm
         self.tools = tools
+        # 初始化 PromptManager，传入当前可用工具名称
+        try:
+            tool_names = list(self.tools.tools.keys()) if hasattr(self.tools, 'tools') else []
+        except Exception:
+            tool_names = []
+
+        self.prompt_manager = PromptManager(tools=tool_names)
+
+        # 生成系统提示并放入初始内存
+        schema_constraint = None
+        try:
+            if hasattr(self.llm, '_get_system_prompt_constraint'):
+                schema_constraint = self.llm._get_system_prompt_constraint()
+        except Exception:
+            schema_constraint = None
+
         self.memory = [
-            {"role": "system", "content": self._generage_system_prompt()}
+            {"role": "system", "content": self.prompt_manager.compose(schema_constraint=schema_constraint)}
         ]
         # 可选的轨迹记录器
         self.trajectory: TrajectoryRecorder | None = None
 
     def _generage_system_prompt(self):
-        return """You are a moduler AI Coding Agent.
-        Response in JSON with 'thought' and 'action', for action you need return action name and action parameters.
-        Available tools: read_file(path), write_file(path, content), excute_shell(command) (alias: execute_shell), finish.
-        YOU MUST ONLY RESPOND IN VALID JSON!
-        """
+        # 兼容旧接口：委托给 PromptManager 生成系统提示
+        schema_constraint = None
+        try:
+            if hasattr(self.llm, '_get_system_prompt_constraint'):
+                schema_constraint = self.llm._get_system_prompt_constraint()
+        except Exception:
+            schema_constraint = None
+
+        return self.prompt_manager.compose(schema_constraint=schema_constraint)
 
     def step(self):
         # 1. 思考
