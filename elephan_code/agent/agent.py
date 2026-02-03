@@ -3,6 +3,10 @@ import typing
 
 from elephan_code.llm.llm import LLMInterface
 from elephan_code.tools import ToolManager
+from elephan_code.utils.trajectory import TrajectoryRecorder
+from elephan_code.utils.logging import get_logger
+
+logger = get_logger("elephan.agent")
 
 
 class Agent:
@@ -12,6 +16,8 @@ class Agent:
         self.memory = [
             {"role": "system", "content": self._generage_system_prompt()}
         ]
+        # 可选的轨迹记录器
+        self.trajectory: TrajectoryRecorder | None = None
 
     def _generage_system_prompt(self):
         return """You are a moduler AI Coding Agent.
@@ -25,7 +31,14 @@ class Agent:
         response_data = self.llm.ask(self.memory)
         self.memory.append({"role": "assistant", "content": json.dumps(response_data.model_dump_json())})
 
-        print(f"\n[Thought]: {response_data.thought}")
+        logger.info("[Thought]: %s", response_data.thought)
+
+        # 轨迹记录：thought
+        try:
+            if self.trajectory:
+                self.trajectory.record_thought(str(response_data.thought))
+        except Exception:
+            pass
 
         action = response_data.action
         if action.name == 'finish':
@@ -42,7 +55,13 @@ class Agent:
         except Exception:
             params = {}
 
-        print(f"\n[Action]: {action.name}({params})")
+        logger.info("[Action]: %s(%s)", action.name, params)
+        # 轨迹记录：action
+        try:
+            if self.trajectory:
+                self.trajectory.record_action(action.name, params)
+        except Exception:
+            pass
         observation = self.tools.call(action.name, params)
 
         # 3. 观察 — 支持新的 ToolResult 结构或兼容旧字符串
@@ -64,14 +83,25 @@ class Agent:
         except Exception:
             obs_str = str(observation)
 
-        print(f"\n[Observation]: {obs_str}...")
+        logger.info("[Observation]: %s", obs_str)
+        # 轨迹记录：observation
+        try:
+            if self.trajectory:
+                self.trajectory.record_observation(obs_str)
+        except Exception:
+            pass
+
         self.memory.append({"role": "user", "content": f"Observation: {obs_str}"})
 
         return True
 
     def run(self, task):
         self.memory.append({"role": "user", "content": task})
+        if self.trajectory:
+            self.trajectory.start(task)
         max_steps = 10
         for _ in range(max_steps):
             if not self.step():
                 break
+        if self.trajectory:
+            self.trajectory.end(status="completed")
