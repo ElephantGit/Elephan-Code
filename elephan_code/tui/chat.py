@@ -296,7 +296,7 @@ class ChatTUI:
             if not self.run_one_turn(user_input):
                 continue
 
-            max_steps = 10
+            max_steps = getattr(self._agent_instance, "max_steps", 10)
             steps = 0
             while steps < max_steps:
                 try:

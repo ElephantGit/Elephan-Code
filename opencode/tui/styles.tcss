@@ -1,0 +1,77 @@
+/* Main app styles */
+
+/* Message containers */
+.user-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: white;
+}
+
+.thought-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: blue;
+    color: blue;
+}
+
+.action-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: yellow;
+    color: yellow;
+}
+
+.observation-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: green;
+    color: green;
+}
+
+.error-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: red;
+    color: red;
+}
+
+.assistant-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: cyan;
+}
+
+.system-message {
+    margin: 1 0;
+    padding: 0 1;
+    border: $text-muted;
+    color: $text-muted;
+}
+
+/* Input area */
+#user-input {
+    dock: bottom;
+    margin: 1 0;
+    border: solid white;
+}
+
+/* Chat container */
+#chat-container {
+    height: auto;
+    min-height: 10;
+    padding: 0 1;
+}
+
+/* Model selector */
+#model-selector {
+    display: none;
+    height: auto;
+}
+
+#model-selector.visible {
+    display: block;
+    margin: 1;
+    height: auto;
+    border: solid $accent;
+    padding: 1;
+}

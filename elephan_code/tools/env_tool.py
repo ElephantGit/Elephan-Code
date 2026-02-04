@@ -2,12 +2,25 @@ from __future__ import annotations
 import subprocess
 import json
 from typing import Any, Dict
-from .base_tool import BaseTool, ToolResult
+from .base_tool import BaseTool, ToolResult, ToolSchema, ToolParameter
 
 
 class EnvTool(BaseTool):
     def __init__(self):
         super().__init__("env_tool")
+        self._schema = ToolSchema(
+            name="env_tool",
+            description="Check environment information and dependencies",
+            parameters=[
+                ToolParameter(
+                    name="action",
+                    type="string",
+                    description="The operation to perform",
+                    required=True,
+                    enum=["check_deps", "list_env"],
+                )
+            ],
+        )
 
     def run(self, **params) -> ToolResult:
         action = params.get("action")
@@ -20,7 +33,9 @@ class EnvTool(BaseTool):
     def check_deps(self, **params) -> ToolResult:
         # run `pip list --format=json`
         try:
-            result = subprocess.run(["pip", "list", "--format=json"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["pip", "list", "--format=json"], capture_output=True, text=True
+            )
             if result.returncode != 0:
                 return ToolResult(success=False, error=result.stderr)
             data = json.loads(result.stdout)
@@ -32,6 +47,7 @@ class EnvTool(BaseTool):
         # basic env info
         try:
             import sys
+
             data = {"python_version": sys.version, "executable": sys.executable}
             return ToolResult(success=True, data=data)
         except Exception as e:

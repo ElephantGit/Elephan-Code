@@ -2,12 +2,38 @@ from __future__ import annotations
 import os
 import shutil
 from typing import Any
-from .base_tool import BaseTool, ToolResult
+from .base_tool import BaseTool, ToolResult, ToolSchema, ToolParameter
 
 
 class FileTool(BaseTool):
     def __init__(self):
         super().__init__("file_tool")
+        self._schema = ToolSchema(
+            name="file_tool",
+            description="Read or write files on the filesystem",
+            parameters=[
+                ToolParameter(
+                    name="action",
+                    type="string",
+                    description="The operation to perform",
+                    required=False,
+                    default="read",
+                    enum=["read", "write"],
+                ),
+                ToolParameter(
+                    name="path",
+                    type="string",
+                    description="Absolute or relative path to the file",
+                    required=True,
+                ),
+                ToolParameter(
+                    name="content",
+                    type="string",
+                    description="Content to write (required for write action)",
+                    required=False,
+                ),
+            ],
+        )
 
     def run(self, **params) -> ToolResult:
         # 支持两个操作：read 和 write，通过 action 参数或参数自动判断
@@ -25,7 +51,7 @@ class FileTool(BaseTool):
 
         try:
             if action == "read":
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(path, "r", encoding="utf-8") as f:
                     data = f.read()
                 return ToolResult(success=True, data=data)
 
@@ -37,13 +63,15 @@ class FileTool(BaseTool):
                     shutil.copy2(path, backup)
                 # atomic write via temp file
                 tmp_path = path + ".tmp"
-                with open(tmp_path, 'w', encoding='utf-8') as f:
+                with open(tmp_path, "w", encoding="utf-8") as f:
                     f.write(content)
                 os.replace(tmp_path, path)
                 return ToolResult(success=True, data="File write successfully.")
 
             else:
-                return ToolResult(success=False, error=f"Unsupported file action: {action}")
+                return ToolResult(
+                    success=False, error=f"Unsupported file action: {action}"
+                )
 
         except Exception as e:
             return ToolResult(success=False, error=str(e))

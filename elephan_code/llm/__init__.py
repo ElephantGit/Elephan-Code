@@ -1,3 +1,21 @@
-from elephan_code.llm.llm import OpenRouterManager, LLMFactory
+from elephan_code.llm.llm import (
+    LLMInterface,
+    LLMFactory,
+    OpenRouterManager,
+    OpenAIManager,
+    AnthropicManager,
+    OllamaManager,
+    AgentResponse,
+    ActionModel,
+)
 
-__all__ = ["OpenRouterManager", "LLMFactory"]
+__all__ = [
+    "LLMInterface",
+    "LLMFactory",
+    "OpenRouterManager",
+    "OpenAIManager",
+    "AnthropicManager",
+    "OllamaManager",
+    "AgentResponse",
+    "ActionModel",
+]
