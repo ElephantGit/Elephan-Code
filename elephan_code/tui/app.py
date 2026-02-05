@@ -2,14 +2,14 @@
 
 import json
 import asyncio
-from pathlib import Path
-from typing import Optional, List, Dict, Callable
+from typing import Optional, Callable
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll, Horizontal
 from textual.widgets import Header, Footer, Input, Static
 from textual import on, log, events
 from textual.reactive import reactive
 
+from elephan_code.tui.common import ModelConfig
 from elephan_code.tui.widgets import (
     UserMessage,
     ThoughtMessage,
@@ -20,47 +20,6 @@ from elephan_code.tui.widgets import (
     SystemMessage,
     StatusBar,
 )
-
-
-class ModelConfig:
-    """Model configuration manager."""
-
-    def __init__(self):
-        self.config_path = Path(__file__).parent.parent / "config" / "models.json"
-        self._config: Dict = {}
-        self._load_config()
-
-    def _load_config(self):
-        """Load model configuration."""
-        if self.config_path.exists():
-            with open(self.config_path, "r", encoding="utf-8") as f:
-                self._config = json.load(f)
-        else:
-            self._config = {
-                "default": "anthropic/claude-3.5-sonnet",
-                "models": [
-                    {
-                        "id": "anthropic/claude-3.5-sonnet",
-                        "name": "Claude 3.5 Sonnet",
-                        "description": "Default model",
-                    }
-                ],
-            }
-
-    def get_models(self) -> List[Dict]:
-        """Get all available models."""
-        return self._config.get("models", [])
-
-    def get_default(self) -> str:
-        """Get default model ID."""
-        return self._config.get("default", "anthropic/claude-3.5-sonnet")
-
-    def get_model_by_index(self, index: int) -> Optional[Dict]:
-        """Get model by index."""
-        models = self.get_models()
-        if 0 <= index < len(models):
-            return models[index]
-        return None
 
 
 class ElephantApp(App):

@@ -1,54 +1,11 @@
 import json
-import os
-from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 from rich.table import Table
 from rich.syntax import Syntax
 from typing import Optional, Callable, Any, List, Dict
-
-
-class ModelConfig:
-    """模型配置管理器"""
-
-    def __init__(self):
-        self.config_path = Path(__file__).parent.parent / "config" / "models.json"
-        self._config: Dict = {}
-        self._load_config()
-
-    def _load_config(self):
-        """加载模型配置"""
-        if self.config_path.exists():
-            with open(self.config_path, "r", encoding="utf-8") as f:
-                self._config = json.load(f)
-        else:
-            # 默认配置
-            self._config = {
-                "default": "anthropic/claude-3.5-sonnet",
-                "models": [
-                    {
-                        "id": "anthropic/claude-3.5-sonnet",
-                        "name": "Claude 3.5 Sonnet",
-                        "description": "Default model",
-                    }
-                ],
-            }
-
-    def get_models(self) -> List[Dict]:
-        """获取所有可用模型"""
-        return self._config.get("models", [])
-
-    def get_default(self) -> str:
-        """获取默认模型ID"""
-        return self._config.get("default", "anthropic/claude-3.5-sonnet")
-
-    def get_model_by_index(self, index: int) -> Optional[Dict]:
-        """根据索引获取模型"""
-        models = self.get_models()
-        if 0 <= index < len(models):
-            return models[index]
-        return None
+from elephan_code.tui.common import ModelConfig
 
 
 class ChatTUI:
