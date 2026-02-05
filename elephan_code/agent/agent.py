@@ -27,9 +27,11 @@ class Agent:
         context_window_tokens: int = DEFAULT_CONTEXT_WINDOW_TOKENS,
         max_parallel_tools: int = DEFAULT_MAX_PARALLEL_TOOLS,
         enable_parallel: bool = True,
+        mode: str = "auto",
     ):
         self.llm = llm
         self.tools = tools
+        self.tool_manager = tools  # 别名便于向后兼容
         self.max_steps = max_steps
         self.max_memory_messages = max_memory_messages
         self.context_window_tokens = context_window_tokens
@@ -46,13 +48,18 @@ class Agent:
                 "role": "system",
                 "content": self.prompt_manager.compose(
                     schema_constraint=schema_constraint
-                ),
+                )
             }
         ]
         self.trajectory: Optional[TrajectoryRecorder] = None
         self.on_thought: Optional[Callable[[str], None]] = None
         self.on_action: Optional[Callable[[str, dict], None]] = None
         self.on_observation: Optional[Callable[[str], None]] = None
+
+        # 执行模式支持
+        self.mode_name = mode
+        self._execution_mode = None
+        self._init_execution_mode(mode)
 
     def _get_schema_constraint(self) -> Optional[str]:
         try:
@@ -61,6 +68,40 @@ class Agent:
         except Exception:
             pass
         return None
+
+    def _init_execution_mode(self, mode: str = "auto") -> None:
+        """初始化执行模式
+
+        Args:
+            mode: 执行模式名称 (auto, standard, plan)
+                - auto: 智能模式，根据任务复杂度自动决定是否预规划（推荐）
+                - standard: 标准模式，直接逐步执行
+                - plan: 计划模式，强制预规划（已弃用，建议使用 auto）
+        """
+        if mode == "auto":
+            from elephan_code.agent.auto_mode import AutoMode
+
+            self._execution_mode = AutoMode(self)
+            logger.info("Agent initialized with Auto Mode (intelligent planning)")
+        else:
+            from elephan_code.agent.standard_mode import StandardMode
+
+            self._execution_mode = StandardMode(self)
+            logger.info("Agent initialized with Standard Mode")
+
+    def set_mode(self, mode: str) -> None:
+        """切换执行模式
+
+        Args:
+            mode: 新的执行模式名称
+        """
+        self.mode_name = mode
+        self._init_execution_mode(mode)
+        logger.info(f"Agent mode switched to: {mode}")
+
+    def get_execution_mode(self):
+        """获取当前执行模式实例"""
+        return self._execution_mode
 
     def _generate_system_prompt(self) -> str:
         schema_constraint = self._get_schema_constraint()

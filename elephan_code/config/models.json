@@ -1,6 +1,11 @@
 {
-  "default": "anthropic/claude-3.5-sonnet",
+  "default": "anthropic/claude-4.5-sonnet",
   "models": [
+    {
+      "id": "anthropic/claude-4.5-sonnet",
+      "name": "Claude 4.5 Sonnet",
+      "description": "Anthropic's balanced model - fast and capable"
+    },
     {
       "id": "anthropic/claude-3.5-sonnet",
       "name": "Claude 3.5 Sonnet",

@@ -91,6 +91,27 @@ class OpenRouterManager(LLMInterface):
             self._client = OpenAI(api_key=self.api_key, base_url=self.base_url)
         return self._client
 
+    def plan_ask(self, messages: List[Dict[str, str]]) -> str:
+        client = self._get_client()
+
+        try:
+            resp = client.chat.completions.create(
+                model=self.model_id,
+                messages=messages,
+                extra_headers={
+                    "HTTP-Referer": "https://github.com/ElephantGit/Elephan-Code.git",
+                    "X-Title": "Elephan-Code",
+                },
+            )
+            content = ""
+            if resp.choices:
+                msg = resp.choices[0].message
+                content = msg.content or ""
+            return content
+        except Exception as e:
+            logger.error(f"Error in OpenRouterManager.ask: {e}")
+            return f"Error: {e}"
+
     def ask(self, messages: List[Dict[str, str]]) -> AgentResponse:
         client = self._get_client()
 
