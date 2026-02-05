@@ -1,18 +1,16 @@
-import os
 import sys
 import asyncio
 import argparse
 from typing import Optional
 from rich.console import Console
-from elephan_code.llm import LLMFactory
 from elephan_code.agent import Agent
-from elephan_code.tools import ToolManager
+from elephan_code.app import AppConfig, build_runtime, get_openrouter_api_key
 from elephan_code.tui import ChatTUI
 from elephan_code.tui.plan_mode_integration import PlanModeDisplayIntegration
 
 
 def _get_env_api_key() -> Optional[str]:
-    return os.environ.get("OPENROUTER_API_KEY")
+    return get_openrouter_api_key()
 
 
 def _parse_arguments():
@@ -50,7 +48,7 @@ class TUIApp:
         self.model_id = initial_model_id
         self.mode = mode
         self.max_steps = max_steps
-        self.tools = ToolManager()
+        self.tools = None
         self.agent: Optional[Agent] = None
         self.tui = ChatTUI()
         self.console = Console()
@@ -60,12 +58,16 @@ class TUIApp:
         self.tui._on_model_change = self._on_model_change
 
     def _create_agent(self):
-        llm = LLMFactory.get_llm(
-            "openrouter",
+        config = AppConfig(
             api_key=self.api_key,
             model_id=self.model_id,
+            mode=self.mode,
+            max_steps=self.max_steps,
+            provider="openrouter",
         )
-        self.agent = Agent(llm, self.tools, mode=self.mode, max_steps=self.max_steps)
+        runtime = build_runtime(config)
+        self.tools = runtime.tools
+        self.agent = runtime.agent
         self.tui.set_agent(self.agent)
 
     def _on_model_change(self, new_model_id: str):

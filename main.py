@@ -1,14 +1,12 @@
-import os
 import sys
 import asyncio
 import argparse
-from elephan_code.llm import LLMFactory
 from elephan_code.agent import Agent
-from elephan_code.tools import ToolManager
+from elephan_code.app import AppConfig, build_runtime, get_openrouter_api_key
 
 
 def _get_env_api_key() -> str | None:
-    return os.environ.get("OPENROUTER_API_KEY")
+    return get_openrouter_api_key()
 
 
 def _parse_arguments():
@@ -77,14 +75,15 @@ if __name__ == "__main__":
 
     lg.info(f"Starting Agent with mode={mode}, task={task}, model={model_id}")
 
-    llm = LLMFactory.get_llm(
-        "openrouter",
+    config = AppConfig(
         api_key=api_key,
         model_id=model_id,
+        mode=mode,
+        max_steps=max_steps,
+        provider="openrouter",
     )
-
-    tools = ToolManager()
-    agent = Agent(llm, tools, mode=mode, max_steps=max_steps)
+    runtime = build_runtime(config)
+    agent = runtime.agent
 
     try:
         # 运行 Agent
